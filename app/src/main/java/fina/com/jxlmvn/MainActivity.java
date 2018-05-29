@@ -14,11 +14,17 @@ import jxl.read.biff.BiffException;
 
 public class MainActivity extends AppCompatActivity {
 
+    private DBhelper dbHelper;
+    private SQLiteDatabase sqLiteDatabase;
+    private ContentValues contentValues;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         importSheet();
+        dbHelper = new DBhelper(this, "TEST.db", null, 1);
+        contentValues = new ContentValues();
     }
 
     private void importSheet() {
@@ -28,10 +34,14 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     InputStream is = getResources().getAssets().open("vip.xls");
                     Workbook workbook = Workbook.getWorkbook(is);
+//                    getsheet in workbook(excel)
                     Sheet sheet = workbook.getSheet(0);
                     for (int j = 0; j < sheet.getRows(); j++) {
-                        init(sheet.getCell(0,j).getContents(),sheet.getCell(1,j).getContents());
+//                       method getCell(col,row);
+                        init(sheet.getCell(0, j).getContents(), sheet.getCell(1, j).getContents());
                     }
+                    sqLiteDatabase.close();
+                    dbHelper.close();
                     workbook.close();
                 } catch (IOException | BiffException ex) {
                     ex.printStackTrace();
@@ -41,14 +51,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void init(String author, String price) {
-        DBhelper dBhelper = new DBhelper(this, "TEST.db", null, 1);
-        SQLiteDatabase sqLiteDatabase = dBhelper.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
+        sqLiteDatabase = dbHelper.getWritableDatabase();
         contentValues.put("author", author);
         contentValues.put("price", price);
         sqLiteDatabase.insert("Book", null, contentValues);
         contentValues.clear();
-        sqLiteDatabase.close();
-        dBhelper.close();
     }
 }
